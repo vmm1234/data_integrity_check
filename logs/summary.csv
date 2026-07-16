@@ -1,0 +1,6 @@
+test_id,test_type,source,target,result,test_complete_time,remark,blocked_case_flag
+TC001,CSV,test_csv/source.csv,test_csv/target.csv,FAIL,2026-07-14 18:43:45,RESULT: Data integrity check found 4 mismatched row(s),
+TC002,CSV,test_csv/source.csv,test_csv/source.csv,PASS,2026-07-14 18:43:45,,
+TC003,DB,TEST.USERS,TEST.USERS2,FAIL,2026-07-14 18:43:45,ERROR: Configuration file 'TEST' not found.,
+TC004,XLS,test_excel/source.xlsx,test_excel/target.xlsx,FAIL,2026-07-14 18:43:45,Mismatched Rows:   11;Rows in Source:    0;,
+TC005,CSV,./source.csv,./target.csv,PASS,2026-07-14 18:43:45,,

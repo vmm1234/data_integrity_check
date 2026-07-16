@@ -1,0 +1,83 @@
+============================================================================
+CSV DATA INTEGRITY CHECK
+============================================================================
+Source File: test_csv/source.csv
+Target File: test_csv/target.csv
+Report Generated: 2026-07-14 18:43:28
+============================================================================
+
+Source Columns: id
+name
+email
+created_at
+Target Columns: id
+name
+email
+created_at
+
+ROW COUNT SUMMARY
+-----------------
+Source Data Rows:      20
+Target Data Rows:      20
+
+DATA MATCH SUMMARY
+------------------
+Rows in Source Only:   2
+Rows in Target Only:   2
+Matching Rows:         18
+Mismatched Rows:       4
+
+============================================================================
+DETAILED MISMATCH REPORT
+============================================================================
+
+Rows Only in SOURCE (up to 100):
+----------------------------------------
+12,Jack Wilson,jack@example.com,2024-01-26
+5,Charlie Brown,charlie@example.com,2024-01-19
+
+Rows Only in TARGET (up to 100):
+----------------------------------------
+21,Sam Jackson,sam@example.com,2024-02-04
+5,Charlie Brown,charlie_updated@example.com,2024-01-19
+
+============================================================================
+COLUMN-BY-COLUMN MISMATCH DETAILS
+============================================================================
+Note: This section shows up to 100 mismatched row comparisons
+
+SOURCE_ROW | id_SRC | id_TGT
+----------------------------
+1 | 1 | 1 | MATCH
+2 | 10 | 10 | MATCH
+3 | 11 | 11 | MATCH
+4 | 12 | 13 | MISMATCH
+5 | 13 | 14 | MISMATCH
+6 | 14 | 15 | MISMATCH
+7 | 15 | 16 | MISMATCH
+8 | 16 | 17 | MISMATCH
+9 | 17 | 18 | MISMATCH
+10 | 18 | 19 | MISMATCH
+11 | 19 | 2 | MISMATCH
+12 | 2 | 20 | MISMATCH
+13 | 20 | 21 | MISMATCH
+14 | 3 | 3 | MATCH
+15 | 4 | 4 | MATCH
+16 | 5 | 5 | MATCH
+17 | 6 | 6 | MATCH
+18 | 7 | 7 | MATCH
+19 | 8 | 8 | MATCH
+20 | 9 | 9 | MATCH
+
+============================================================================
+END OF CSV DATA INTEGRITY CHECK REPORT
+============================================================================
+
+============================================================================
+SUMMARY
+============================================================================
+[0;31mRESULT: Data integrity check found 4 mismatched row(s)[0m
+  - Rows only in source: 2
+  - Rows only in target: 2
+  - Matching rows: 18
+============================================================================

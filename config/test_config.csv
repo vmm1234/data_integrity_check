@@ -1,0 +1,6 @@
+test_id,test_key,blocked_case_flag,pre_test_script,check_order,test_type,source_location,source_name,target_location,target_name,source_partition,target_partition,requirement,expected_result
+TC001,,,,,CSV,test_csv,source.csv,test_csv,target.csv,,,,
+TC002,,,,,CSV,test_csv,source.csv,test_csv,source.csv,,,,
+TC003,,,,,DB,TEST,USERS,TEST,USERS2,,,CALC-123,
+TC004,,,,,XLS,test_excel,source.xlsx,test_excel,target.xlsx,,,,
+TC005,,,./test_scripts/test1.sh,,CSV,.,source.csv,.,target.csv,,,,

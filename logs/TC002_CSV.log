@@ -1,0 +1,77 @@
+============================================================================
+CSV DATA INTEGRITY CHECK
+============================================================================
+Source File: test_csv/source.csv
+Target File: test_csv/source.csv
+Report Generated: 2026-07-14 18:43:45
+============================================================================
+
+Source Columns: id
+name
+email
+created_at
+Target Columns: id
+name
+email
+created_at
+
+ROW COUNT SUMMARY
+-----------------
+Source Data Rows:      20
+Target Data Rows:      20
+
+DATA MATCH SUMMARY
+------------------
+Rows in Source Only:   0
+Rows in Target Only:   0
+Matching Rows:         20
+Mismatched Rows:       0
+
+============================================================================
+DETAILED MISMATCH REPORT
+============================================================================
+
+Rows Only in SOURCE (up to 100):
+----------------------------------------
+
+Rows Only in TARGET (up to 100):
+----------------------------------------
+
+============================================================================
+COLUMN-BY-COLUMN MISMATCH DETAILS
+============================================================================
+Note: This section shows up to 100 mismatched row comparisons
+
+SOURCE_ROW | id_SRC | id_TGT
+----------------------------
+1 | 1 | 1 | MATCH
+2 | 10 | 10 | MATCH
+3 | 11 | 11 | MATCH
+4 | 12 | 12 | MATCH
+5 | 13 | 13 | MATCH
+6 | 14 | 14 | MATCH
+7 | 15 | 15 | MATCH
+8 | 16 | 16 | MATCH
+9 | 17 | 17 | MATCH
+10 | 18 | 18 | MATCH
+11 | 19 | 19 | MATCH
+12 | 2 | 2 | MATCH
+13 | 20 | 20 | MATCH
+14 | 3 | 3 | MATCH
+15 | 4 | 4 | MATCH
+16 | 5 | 5 | MATCH
+17 | 6 | 6 | MATCH
+18 | 7 | 7 | MATCH
+19 | 8 | 8 | MATCH
+20 | 9 | 9 | MATCH
+
+============================================================================
+END OF CSV DATA INTEGRITY CHECK REPORT
+============================================================================
+
+============================================================================
+SUMMARY
+============================================================================
+[0;32mRESULT: All data matches![0m
+Source and target files are identical.
+============================================================================

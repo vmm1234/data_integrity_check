@@ -1,0 +1,8 @@
+test_id,test_key,check_type,target,expected,requirement
+ENV001,,exists,run_check_integrity.sh,,
+ENV002,,exists,logs/,
+ENV003,,not_exists,temp/,,
+ENV004,,perm,run_check_integrity.sh,755,
+ENV005,,perm,config/test_config.csv,644,
+ENV006,,cmd,python3,python3 --version,
+ENV007,,cmd,sqlplus,sqlplus -V,
