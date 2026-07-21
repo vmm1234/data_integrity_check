@@ -183,15 +183,15 @@ run_check() {
 # PASS 1: Read config and group rows by test_id
 # ============================================================================
 declare -a TEST_IDS_ORDER=()
-declare -A TEST_IDS_SEEN=()
+UNIQUE_IDS=""
 
 while IFS=',' read -r test_id test_key blocked_case_flag pre_test_script check_order test_type source_location source_name target_location target_name source_partition target_partition requirement expected_result; do
     # Skip empty lines
     [ -z "$test_id" ] && continue
 
-    # Track unique test_ids in order of first appearance
-    if [ -z "${TEST_IDS_SEEN[$test_id]}" ]; then
-        TEST_IDS_SEEN[$test_id]=1
+    # Track unique test_ids in order of first appearance (bash 3.2 compatible)
+    if ! echo "$UNIQUE_IDS" | grep -qw "$test_id"; then
+        UNIQUE_IDS="${UNIQUE_IDS} ${test_id}"
         TEST_IDS_ORDER+=("$test_id")
     fi
 
