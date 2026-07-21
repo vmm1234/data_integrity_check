@@ -31,6 +31,54 @@ xml_escape() {
 }
 
 # ============================================================================
+# parse_csv_line — Parse a CSV line with RFC 4180 double-quote support
+# ============================================================================
+# Handles:
+#   - Unquoted fields:           a,b,c
+#   - Quoted fields:             a,"b,c",d
+#   - Doubled quotes in field:   a,"b""c",d  →  b"c
+#
+# Sets global array PARSED_FIELDS with the extracted field values.
+# ============================================================================
+parse_csv_line() {
+    local line="$1"
+    PARSED_FIELDS=()
+    local field=""
+    local in_quotes=false
+    local i=0
+    local len=${#line}
+
+    while [ $i -lt $len ]; do
+        local char="${line:$i:1}"
+
+        if [ "$char" = '"' ]; then
+            if [ "$in_quotes" = true ]; then
+                # Doubled quote "" → literal quote
+                if [ $((i + 1)) -lt $len ] && [ "${line:$((i + 1)):1}" = '"' ]; then
+                    field="${field}\""
+                    i=$((i + 2))
+                else
+                    in_quotes=false
+                    i=$((i + 1))
+                fi
+            else
+                in_quotes=true
+                i=$((i + 1))
+            fi
+        elif [ "$char" = ',' ] && [ "$in_quotes" = false ]; then
+            PARSED_FIELDS+=("$field")
+            field=""
+            i=$((i + 1))
+        else
+            field="${field}${char}"
+            i=$((i + 1))
+        fi
+    done
+
+    PARSED_FIELDS+=("$field")
+}
+
+# ============================================================================
 # run_check — Execute a single check and set result/remark/source/target
 # ============================================================================
 # Arguments:
@@ -185,8 +233,25 @@ run_check() {
 declare -a TEST_IDS_ORDER=()
 UNIQUE_IDS=""
 
-while IFS=',' read -r test_id test_key blocked_case_flag pre_test_script check_order test_type source_location source_name target_location target_name source_partition target_partition requirement expected_result; do
-    # Skip empty lines
+while IFS= read -r _csv_line; do
+    [ -z "$_csv_line" ] && continue
+
+    parse_csv_line "$_csv_line"
+    test_id="${PARSED_FIELDS[0]}"
+    test_key="${PARSED_FIELDS[1]}"
+    blocked_case_flag="${PARSED_FIELDS[2]}"
+    pre_test_script="${PARSED_FIELDS[3]}"
+    check_order="${PARSED_FIELDS[4]}"
+    test_type="${PARSED_FIELDS[5]}"
+    source_location="${PARSED_FIELDS[6]}"
+    source_name="${PARSED_FIELDS[7]}"
+    target_location="${PARSED_FIELDS[8]}"
+    target_name="${PARSED_FIELDS[9]}"
+    source_partition="${PARSED_FIELDS[10]}"
+    target_partition="${PARSED_FIELDS[11]}"
+    requirement="${PARSED_FIELDS[12]}"
+    expected_result="${PARSED_FIELDS[13]}"
+
     [ -z "$test_id" ] && continue
 
     # Track unique test_ids in order of first appearance (bash 3.2 compatible)
@@ -195,8 +260,12 @@ while IFS=',' read -r test_id test_key blocked_case_flag pre_test_script check_o
         TEST_IDS_ORDER+=("$test_id")
     fi
 
-    # Write row to staging file for this test_id
-    echo "${check_order},${test_type},${source_location},${source_name},${target_location},${target_name},${source_partition},${target_partition},${pre_test_script},${test_key},${blocked_case_flag},${requirement},${expected_result}" >> "${STAGING_DIR}/${test_id}"
+    # Write row to staging file (0x1F-delimited) for this test_id
+    printf '%s\x1f%s\x1f%s\x1f%s\x1f%s\x1f%s\x1f%s\x1f%s\x1f%s\x1f%s\x1f%s\x1f%s\x1f%s\n' \
+        "$check_order" "$test_type" "$source_location" "$source_name" \
+        "$target_location" "$target_name" "$source_partition" "$target_partition" \
+        "$pre_test_script" "$test_key" "$blocked_case_flag" "$requirement" \
+        "$expected_result" >> "${STAGING_DIR}/${test_id}"
 done < <(tail -n +2 "$CONFIG_FILE")
 
 # ============================================================================
@@ -230,7 +299,7 @@ for test_id in "${TEST_IDS_ORDER[@]}"; do
     group_check_count=0
     group_start_time=$(date +%s)
 
-    while IFS=',' read -r check_order stype sloc sname tloc tname spart tpart pscript tkey bflag req eresult; do
+    while IFS=$'\x1f' read -r check_order stype sloc sname tloc tname spart tpart pscript tkey bflag req eresult; do
         # Shared metadata from first row
         if [ "$first_row" = true ]; then
             test_key="$tkey"
@@ -253,7 +322,7 @@ for test_id in "${TEST_IDS_ORDER[@]}"; do
         echo "BLOCKED: $test_id — blocked_case_flag=Y, skipping"
         echo "------------------------------------------------------------------------"
         # Collect types for summary
-        blocked_types=$(awk -F',' '{printf "%s%s", (NR>1?",":""), $2}' "$staging_file")
+        blocked_types=$(awk -F'\x1f' '{printf "%s%s", (NR>1?",":""), $2}' "$staging_file")
         echo "$test_id,$blocked_types,,,,BLOCKED,$(date '+%Y-%m-%d %H:%M:%S'),blocked_case_flag=Y," >> "$SUMMARY_FILE"
         echo "------------------------------------------------------------------------"
         echo "Result: BLOCKED"
@@ -289,10 +358,10 @@ for test_id in "${TEST_IDS_ORDER[@]}"; do
     fi
 
     # Sort staging rows by check_order (empty orders sort last)
-    sorted_rows=$(sort -t',' -k1,1n -s "$staging_file" 2>/dev/null || sort -t',' -k1,1 "$staging_file")
+    sorted_rows=$(sort -t$'\x1f' -k1,1n -s "$staging_file" 2>/dev/null || sort -t$'\x1f' -k1,1 "$staging_file")
 
     # Execute each sub-check
-    while IFS=',' read -r check_order stype sloc sname tloc tname spart tpart pscript tkey bflag req eresult; do
+    while IFS=$'\x1f' read -r check_order stype sloc sname tloc tname spart tpart pscript tkey bflag req eresult; do
         group_check_count=$((group_check_count + 1))
 
         echo ""
