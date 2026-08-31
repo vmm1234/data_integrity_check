@@ -143,8 +143,8 @@ run_check() {
             else
                 _output=$("${SCRIPT_DIR}/check_data_integrity.sh" "$_db_config" "$_source_location" "$_source_name" "$_target_location" "$_target_name" "$_source_partition" "$_target_partition" </dev/null 2>&1)
                 _ec=$?
-                echo "$_output"
                 local _report_file="${SCRIPT_DIR}/data_integrity_report.txt"
+                echo "$_output" > "$_report_file"
                 if [ $_ec -ne 0 ]; then
                     result="FAIL"
                     remark=$(echo "$_output" | grep -i "^ERROR" | head -1)
@@ -277,13 +277,14 @@ failed=0
 xml_content=""
 total_elapsed=0
 
-echo "test_id,test_type,source,target,result,test_complete_time,remark,blocked_case_flag,check_order" > "$SUMMARY_FILE"
+echo '"test_id","test_type","source","target","result","test_complete_time","remark","blocked_case_flag","check_order"' > "$SUMMARY_FILE"
 
 for test_id in "${TEST_IDS_ORDER[@]}"; do
     staging_file="${STAGING_DIR}/${test_id}"
 
     # Read all rows for this test_id, extract shared metadata from first row
     first_row=true
+    first_type=""
     test_key=""
     blocked_case_flag=""
     pre_test_script=""
@@ -302,6 +303,7 @@ for test_id in "${TEST_IDS_ORDER[@]}"; do
     while IFS=$'\x1f' read -r check_order stype sloc sname tloc tname spart tpart pscript tkey bflag req eresult; do
         # Shared metadata from first row
         if [ "$first_row" = true ]; then
+            first_type="$stype"
             test_key="$tkey"
             blocked_case_flag="$bflag"
             pre_test_script="$pscript"
@@ -323,7 +325,7 @@ for test_id in "${TEST_IDS_ORDER[@]}"; do
         echo "------------------------------------------------------------------------"
         # Collect types for summary
         blocked_types=$(awk -F'\x1f' '{printf "%s%s", (NR>1?",":""), $2}' "$staging_file")
-        echo "$test_id,$blocked_types,,,,BLOCKED,$(date '+%Y-%m-%d %H:%M:%S'),blocked_case_flag=Y," >> "$SUMMARY_FILE"
+        echo "\"$test_id\",\"$blocked_types\",\"\",\"\",\"\",\"BLOCKED\",\"$(date '+%Y-%m-%d %H:%M:%S')\",\"blocked_case_flag=Y\"," >> "$SUMMARY_FILE"
         echo "------------------------------------------------------------------------"
         echo "Result: BLOCKED"
         echo ""
@@ -344,7 +346,7 @@ for test_id in "${TEST_IDS_ORDER[@]}"; do
     # Pre-test script (once per group)
     pre_test_ec=0
     pre_test_log="${LOG_DIR}/${test_id}_pre_test.log"
-    if [ -n "$pre_test_script" ]; then
+    if [ -n "$pre_test_script" ] && [ "$first_type" != "SCRIPT" ]; then
         echo "[Pre-test] $pre_test_script"
         eval "$pre_test_script" > "$pre_test_log" 2>&1
         pre_test_ec=$?
@@ -446,7 +448,7 @@ for test_id in "${TEST_IDS_ORDER[@]}"; do
         passed=$((passed + 1))
     else
         failed=$((failed + 1))
-    fi
+    fig
 
     echo "------------------------------------------------------------------------"
     echo "Overall: $group_result ($group_check_count sub-checks, $group_failed_count failed)"
@@ -457,7 +459,7 @@ for test_id in "${TEST_IDS_ORDER[@]}"; do
 
     # Summary CSV row
     group_remarks_csv="${group_remarks//,/;}"
-    echo "$test_id,$group_type_list,$group_source_list,$group_target_list,$group_result,$test_complete_time,$group_remarks_csv,$blocked_case_flag," >> "$SUMMARY_FILE"
+    echo "\"$test_id\",\"$group_type_list\",\"$group_source_list\",\"$group_target_list\",\"$group_result\",\"$test_complete_time\",\"$group_remarks_csv\",\"$blocked_case_flag\"," >> "$SUMMARY_FILE"
 
     # ── XML TESTCASE ─────────────────────────────────────────────────
     esc_test_id=$(xml_escape "$test_id")

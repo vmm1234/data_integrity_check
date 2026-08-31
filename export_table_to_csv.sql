@@ -7,7 +7,7 @@
 -- PARAMETERS:
 --   &1 = SCHEMA name
 --   &2 = TABLE name
---   &3 = PARTITION name (or empty string if none)
+--   &3 = PARTITION name (or NO_PARTITION / empty if none)
 --
 -- Output is written to stdout. Redirect to file when calling.
 -- ============================================================================
@@ -32,7 +32,7 @@ DECLARE
 BEGIN
     -- Build table reference
     v_table_ref := v_schema || '.' || v_table;
-    IF v_partition IS NOT NULL AND v_partition != '' THEN
+    IF v_partition IS NOT NULL AND v_partition != 'NO_PARTITION' THEN
         v_table_ref := v_table_ref || ' PARTITION (' || v_partition || ')';
     END IF;
 
@@ -53,21 +53,21 @@ BEGIN
             v_select_list := v_select_list || ' || '','' || ';
         END IF;
 
-        v_col_list := v_col_list || c.column_name;
+        v_col_list := v_col_list || '"' || c.column_name || '"';
 
         -- Format based on data type
         IF c.data_type IN ('VARCHAR2', 'CHAR', 'NVARCHAR2', 'NCHAR') THEN
             v_select_list := v_select_list ||
-                '''"'' || REPLACE(NVL(' || c.column_name || ', ''NULL''), ''"'', ''""'') || ''"''';
+                '''"'' || REPLACE(NVL(' || '"' || c.column_name || '"' || ', ''NULL''), ''"'', ''""'') || ''"''';
         ELSIF c.data_type IN ('DATE', 'TIMESTAMP', 'TIMESTAMP WITH TIME ZONE',
                                'TIMESTAMP WITH LOCAL TIME ZONE', 'INTERVAL DAY TO SECOND',
                                'INTERVAL YEAR TO MONTH') THEN
             v_select_list := v_select_list ||
-                'NVL(TO_CHAR(' || c.column_name || ', ''YYYY-MM-DD HH24:MI:SS''), ''NULL'')';
+                'NVL(TO_CHAR(' || '"' || c.column_name || '"' || ', ''YYYY-MM-DD HH24:MI:SS''), ''NULL'')';
         ELSIF c.data_type IN ('NUMBER', 'FLOAT', 'BINARY_FLOAT', 'BINARY_DOUBLE') THEN
-            v_select_list := v_select_list || 'NVL(TO_CHAR(' || c.column_name || '), ''NULL'')';
+            v_select_list := v_select_list || 'NVL(TO_CHAR(' || '"' || c.column_name || '"' || '), ''NULL'')';
         ELSE
-            v_select_list := v_select_list || 'NVL(TO_CHAR(' || c.column_name || '), ''NULL'')';
+            v_select_list := v_select_list || 'NVL(TO_CHAR(' || '"' || c.column_name || '"' || '), ''NULL'')';
         END IF;
     END LOOP;
 

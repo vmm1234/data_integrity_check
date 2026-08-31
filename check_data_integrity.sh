@@ -139,7 +139,7 @@ export_table_to_csv() {
     local conn="$1"
     local schema="$2"
     local table="$3"
-    local partition="$4"
+    local partition="${4:-NO_PARTITION}"
     local output_file="$5"
 
     echo "Exporting ${schema}.${table} to CSV..."

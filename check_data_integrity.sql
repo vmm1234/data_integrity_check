@@ -124,14 +124,14 @@ BEGIN
             v_out_list := v_out_list || ' || '' | '' || ';
         END IF;
 
-        v_sel_src := v_sel_src || 's.' || c.column_name;
-        v_sel_tgt := v_sel_tgt || 't.' || c.column_name;
+        v_sel_src := v_sel_src || 's.' || '"' || c.column_name || '"';
+        v_sel_tgt := v_sel_tgt || 't.' || '"' || c.column_name || '"';
         v_join_cond := v_join_cond ||
-            '(s.' || c.column_name || ' = t.' || c.column_name || ' OR (s.' || c.column_name || ' IS NULL AND t.' || c.column_name || ' IS NULL))';
+            '(s.' || '"' || c.column_name || '"' || ' = t.' || '"' || c.column_name || '"' || ' OR (s.' || '"' || c.column_name || '"' || ' IS NULL AND t.' || '"' || c.column_name || '"' || ' IS NULL))';
         v_where_cond := v_where_cond ||
-            'NOT (s.' || c.column_name || ' = t.' || c.column_name || ' OR (s.' || c.column_name || ' IS NULL AND t.' || c.column_name || ' IS NULL))';
+            'NOT (s.' || '"' || c.column_name || '"' || ' = t.' || '"' || c.column_name || '"' || ' OR (s.' || '"' || c.column_name || '"' || ' IS NULL AND t.' || '"' || c.column_name || '"' || ' IS NULL))';
         v_out_list := v_out_list ||
-            'COALESCE(TO_CHAR(s.' || c.column_name || '), ''NULL'') || '' | '' || COALESCE(TO_CHAR(t.' || c.column_name || '), ''NULL'')';
+            'COALESCE(TO_CHAR(s.' || '"' || c.column_name || '"' || '), ''NULL'') || '' | '' || COALESCE(TO_CHAR(t.' || '"' || c.column_name || '"' || '), ''NULL'')';
     END LOOP;
 
     IF v_col_count = 0 THEN
@@ -139,8 +139,8 @@ BEGIN
         RETURN;
     END IF;
 
-    v_sel_src := v_sel_src || ', ROW_NUMBER() OVER (ORDER BY s.' || v_first_col || ') AS s_rn';
-    v_sel_tgt := v_sel_tgt || ', ROW_NUMBER() OVER (ORDER BY t.' || v_first_col || ') AS t_rn';
+    v_sel_src := v_sel_src || ', ROW_NUMBER() OVER (ORDER BY s.' || '"' || v_first_col || '"' || ') AS s_rn';
+    v_sel_tgt := v_sel_tgt || ', ROW_NUMBER() OVER (ORDER BY t.' || '"' || v_first_col || '"' || ') AS t_rn';
 
     -- Simple column list (no prefixes) for MINUS/INTERSECT
     v_col_list := '';
@@ -153,7 +153,7 @@ BEGIN
         IF v_col_list IS NOT NULL THEN
             v_col_list := v_col_list || ', ';
         END IF;
-        v_col_list := v_col_list || c.column_name;
+        v_col_list := v_col_list || '"' || c.column_name || '"';
     END LOOP;
 
     -- Build simple output list (source columns only, no prefixes)
@@ -168,7 +168,7 @@ BEGIN
             v_output_list := v_output_list || ' || '' | '' || ';
         END IF;
         v_output_list := v_output_list ||
-            'COALESCE(TO_CHAR(' || c.column_name || '), ''NULL'')';
+            'COALESCE(TO_CHAR(' || '"' || c.column_name || '"' || '), ''NULL'')';
     END LOOP;
 
     v_s_cols := '';
@@ -183,8 +183,8 @@ BEGIN
             v_s_cols := v_s_cols || ', ';
             v_t_cols := v_t_cols || ', ';
         END IF;
-        v_s_cols := v_s_cols || 's.' || c.column_name;
-        v_t_cols := v_t_cols || 't.' || c.column_name;
+        v_s_cols := v_s_cols || 's.' || '"' || c.column_name || '"';
+        v_t_cols := v_t_cols || 't.' || '"' || c.column_name || '"';
     END LOOP;
 
     PIPE ROW(report_line_t('============================================================================'));
